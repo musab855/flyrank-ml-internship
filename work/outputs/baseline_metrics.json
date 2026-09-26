@@ -1,0 +1,15 @@
+{
+  "rule": "HIGH_VOLUME_POOR_POSITION",
+  "impressions_threshold": 500,
+  "position_threshold": 11,
+  "total_pages": 150675,
+  "flagged_pages": 1074,
+  "flagged_pct": 0.71,
+  "base_rate": 0.434,
+  "precision_at_10": 1.0,
+  "precision_at_20": 0.95,
+  "precision_at_50": 0.88,
+  "impressions_verdict": "CONFIRMED",
+  "position_verdict": "MIXED",
+  "excluded_no_position_data_rows": 1306
+}
