@@ -1,0 +1,19 @@
+{
+  "rule": "HIGH_VOLUME_POOR_POSITION",
+  "impressions_threshold": 500,
+  "position_threshold": 11,
+  "total_pages": 140599,
+  "flagged_pages": 1074,
+  "flagged_pct": 0.76,
+  "base_rate": 0.465,
+  "precision_at_10": 1.0,
+  "precision_at_20": 0.95,
+  "precision_at_50": 0.88,
+  "impressions_verdict": "CONFIRMED",
+  "position_verdict": "MIXED",
+  "evaluation": "full March, flagged pages only, no holdout",
+  "rows_before_filter": 176738,
+  "excluded_position_nan": 24757,
+  "excluded_position_zero": 1306,
+  "excluded_label_nan_additional": 10076
+}
