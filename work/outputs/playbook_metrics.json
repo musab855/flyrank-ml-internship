@@ -73,6 +73,15 @@
       "page_one_high_stakes": 2031,
       "high_volume_deep_position": 1074
     },
+    "archetype_standing_action": {
+      "high_volume_deep_position": "review_first_refresh_and_ctr",
+      "page_one_high_stakes": "protect_and_monitor",
+      "mid_volume_opportunity": "monitor",
+      "low_volume_long_tail": "monitor_only"
+    },
+    "tier_b_archetype_mix": {
+      "mid_volume_opportunity": 94
+    },
     "archetype_decline_rate": {
       "high_volume_deep_position": 0.7803,
       "low_volume_long_tail": 0.4506,
@@ -81,8 +90,8 @@
     },
     "reason_codes_in_tier_a": {
       "HIGH_VOLUME_POOR_POSITION": 1074,
-      "NEAR_ZERO_CTR": 572,
-      "BORDERLINE": 170,
+      "NEAR_ZERO_CTR_IMPRESSIONS": 572,
+      "BORDERLINE_THRESHOLD": 170,
       "MODEL_HIGH_DECLINE_RANK": 621,
       "PAGE_ONE_HIGH_STAKES": 0,
       "LOW_VOLUME_WATCH": 0
@@ -145,20 +154,20 @@
     {
       "trigger": "queue_precision@50 on new labels",
       "rule": "re-audit thresholds, then retrain, if P@50 < 0.70 on the next scored month",
-      "current": "0.880",
-      "status": "OK"
+      "current": "0.880 (March reference)",
+      "status": "BASELINE (same frame; real test is next month)"
     },
     {
       "trigger": "grouped ROC-AUC (forest)",
       "rule": "retrain + re-check features if AUC < 0.60 on a fresh client-grouped run",
-      "current": "0.654",
-      "status": "OK"
+      "current": "0.654 (March reference)",
+      "status": "BASELINE (same frame; real test is next month)"
     },
     {
       "trigger": "base-rate drift",
       "rule": "if |new base rate - 0.465| > 0.05: check seasonality and label definition BEFORE retraining",
-      "current": "0.465 (delta 0.000)",
-      "status": "OK"
+      "current": "0.465 (reference month itself)",
+      "status": "BASELINE (drift is undefined until a second month exists)"
     },
     {
       "trigger": "near-zero-CTR share of top 50",
