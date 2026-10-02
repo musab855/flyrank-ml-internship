@@ -1,0 +1,210 @@
+{
+  "assignment": "ML-10 content action playbook",
+  "frame": {
+    "window": "2026-03-01..2026-03-31",
+    "features": [
+      "gsc_impressions_avg",
+      "gsc_clicks_avg",
+      "position_avg"
+    ],
+    "label": "impressions days 16-31 < days 1-15",
+    "pages": 140599,
+    "clients": 43,
+    "base_rate": 0.4649,
+    "flagged_by_rule": 1074,
+    "split": "client-grouped 5-fold OOF",
+    "random_state": 42
+  },
+  "receipts": {
+    "rule": {
+      "precision_at_10": 1.0,
+      "precision_at_20": 0.95,
+      "precision_at_50": 0.88,
+      "roc_auc": 0.5048,
+      "avg_precision": 0.4694
+    },
+    "rule_full": {
+      "precision_at_10": 1.0,
+      "precision_at_20": 0.95,
+      "precision_at_50": 0.88,
+      "roc_auc": 0.6094,
+      "avg_precision": 0.5375
+    },
+    "impressions_only": {
+      "precision_at_10": 0.7,
+      "precision_at_20": 0.7,
+      "precision_at_50": 0.62,
+      "roc_auc": 0.6094,
+      "avg_precision": 0.5337
+    },
+    "logistic_regression": {
+      "precision_at_10": 0.7,
+      "precision_at_20": 0.7,
+      "precision_at_50": 0.78,
+      "roc_auc": 0.6298,
+      "avg_precision": 0.5711
+    },
+    "random_forest": {
+      "precision_at_10": 0.5,
+      "precision_at_20": 0.55,
+      "precision_at_50": 0.66,
+      "roc_auc": 0.6543,
+      "avg_precision": 0.583
+    }
+  },
+  "queue": {
+    "total": 1168,
+    "tier_a": 1074,
+    "tier_b": 94,
+    "declining_rate": 0.78,
+    "action_mix": {
+      "verify_traffic_first": 572,
+      "review_first_refresh_and_ctr": 502,
+      "secondary_review": 94
+    },
+    "confidence_mix": {
+      "low": 687,
+      "medium": 461,
+      "high": 20
+    },
+    "archetype_mix": {
+      "low_volume_long_tail": 119836,
+      "mid_volume_opportunity": 17658,
+      "page_one_high_stakes": 2031,
+      "high_volume_deep_position": 1074
+    },
+    "archetype_decline_rate": {
+      "high_volume_deep_position": 0.7803,
+      "low_volume_long_tail": 0.4506,
+      "mid_volume_opportunity": 0.544,
+      "page_one_high_stakes": 0.453
+    },
+    "reason_codes_in_tier_a": {
+      "HIGH_VOLUME_POOR_POSITION": 1074,
+      "NEAR_ZERO_CTR": 572,
+      "BORDERLINE": 170,
+      "MODEL_HIGH_DECLINE_RANK": 621,
+      "PAGE_ONE_HIGH_STAKES": 0,
+      "LOW_VOLUME_WATCH": 0
+    },
+    "top50_near_zero_ctr": 33,
+    "top50_clients": 3
+  },
+  "capacity_assumptions": {
+    "review_minutes_per_page": 30,
+    "tier_b_min_score": 0.8,
+    "tier_b_min_impressions": 100
+  },
+  "decay_refresh_starter_csv": {
+    "note": "different dataset + label from the queue; context only, never a queue input",
+    "pages": 30000,
+    "decline_base_rate": 0.5421,
+    "by_age_bucket": {
+      "<180 days": {
+        "decline_rate": 0.6273,
+        "pages": 12272
+      },
+      "180-365 days": {
+        "decline_rate": 0.5149,
+        "pages": 11368
+      },
+      "365+ days": {
+        "decline_rate": 0.4263,
+        "pages": 6360
+      }
+    },
+    "by_freshness_bucket": {
+      "0-30": {
+        "decline_rate": 0.5114,
+        "pages": 20480,
+        "readable": true
+      },
+      "31-90": {
+        "decline_rate": 0.5886,
+        "pages": 175,
+        "readable": false
+      },
+      "91-180": {
+        "decline_rate": 0.6111,
+        "pages": 9171,
+        "readable": true
+      },
+      "181-365": {
+        "decline_rate": 0.4675,
+        "pages": 169,
+        "readable": false
+      },
+      "365+": {
+        "decline_rate": 0.6,
+        "pages": 5,
+        "readable": false
+      }
+    }
+  },
+  "triggers": [
+    {
+      "trigger": "queue_precision@50 on new labels",
+      "rule": "re-audit thresholds, then retrain, if P@50 < 0.70 on the next scored month",
+      "current": "0.880",
+      "status": "OK"
+    },
+    {
+      "trigger": "grouped ROC-AUC (forest)",
+      "rule": "retrain + re-check features if AUC < 0.60 on a fresh client-grouped run",
+      "current": "0.654",
+      "status": "OK"
+    },
+    {
+      "trigger": "base-rate drift",
+      "rule": "if |new base rate - 0.465| > 0.05: check seasonality and label definition BEFORE retraining",
+      "current": "0.465 (delta 0.000)",
+      "status": "OK"
+    },
+    {
+      "trigger": "near-zero-CTR share of top 50",
+      "rule": "if > 60%: traffic verification is mandatory before any content action (gates editing)",
+      "current": "66% (33/50)",
+      "status": "FIRING (by design - verification gate stays on)"
+    },
+    {
+      "trigger": "single-client share of top 50",
+      "rule": "if > 60%: warn the reviewer that the queue is client-concentrated; read within-client",
+      "current": "82%",
+      "status": "FIRING (warn reviewer, queue stays as-is)"
+    },
+    {
+      "trigger": "frame freshness",
+      "rule": "score the most recent complete month; if the frame is not it, re-run this notebook",
+      "current": "2026-03 (fixed evaluation window)",
+      "status": "CHECK AT NEXT RUN"
+    },
+    {
+      "trigger": "queue overlap month over month",
+      "rule": "if < 50% of last month's top-50 returns: re-rank, then re-audit the reason codes",
+      "current": "first run - no prior queue",
+      "status": "CHECK AT NEXT RUN"
+    },
+    {
+      "trigger": "feature drift (median impressions/day)",
+      "rule": "if the frame median shifts > 20% vs the prior month: re-check thresholds before trusting scores",
+      "current": "first run - no prior frame",
+      "status": "CHECK AT NEXT RUN"
+    },
+    {
+      "trigger": "position cutoff verdict",
+      "rule": "Week-4 verdict was MIXED; if it flips on new data, re-audit `position >= 11` (policy, not evidence)",
+      "current": "MIXED (Week 4)",
+      "status": "MONITOR"
+    }
+  ],
+  "figures": [
+    "queue_yield_curve.svg",
+    "queue_action_mix.svg",
+    "decay_refresh_insight.svg",
+    "capacity_vs_yield.svg"
+  ],
+  "exports": {
+    "queue_csv": "work\\outputs\\action_queue.csv",
+    "note": "queue CSV is gitignored by design (CI leak-guard); regenerate with this notebook"
+  }
+}
