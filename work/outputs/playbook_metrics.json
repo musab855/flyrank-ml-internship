@@ -166,8 +166,8 @@
     {
       "trigger": "base-rate drift",
       "rule": "if |new base rate - 0.465| > 0.05: check seasonality and label definition BEFORE retraining",
-      "current": "0.465 (reference month itself)",
-      "status": "BASELINE (drift is undefined until a second month exists)"
+      "current": "0.465 (delta 0.000; drift undefined until a second month exists)",
+      "status": "BASELINE"
     },
     {
       "trigger": "near-zero-CTR share of top 50",
@@ -184,8 +184,8 @@
     {
       "trigger": "frame freshness",
       "rule": "score the most recent complete month; if the frame is not it, re-run this notebook",
-      "current": "2026-03 (fixed evaluation window)",
-      "status": "CHECK AT NEXT RUN"
+      "current": "2026-03 scored in a later month (fixed evaluation window)",
+      "status": "FIRING (by design: the audit window is fixed; re-score when newer data is allowed)"
     },
     {
       "trigger": "queue overlap month over month",
