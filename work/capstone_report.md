@@ -55,7 +55,7 @@ public, so they never enter this work); `trend_pct` / `trend_direction` / `is_de
 (derived from the outcome — leakage); `content_id` / `client_hash_id` as features (grouping and
 folds only); every product decision flag or score (not present in the release, and never
 rebuilt); the label's own window column `gsc_impressions_16to31` (kept in the cache only so
-ML-09 could prove the harness detects it, dropped before modeling).
+ML-09 could demonstrate that the harness detects it, dropped before modeling).
 
 **Leakage risks considered.** Label-derived columns (asserted banned in code), future/overlapping
 windows (features days 1–15, prediction moment 2026-03-16, label days 16–31 — the timeline is

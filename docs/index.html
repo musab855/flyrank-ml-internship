@@ -191,9 +191,9 @@ sits in exactly one test fold, so every page is scored by a model that never saw
 metrics are computed on the pooled out-of-fold scores — one queue, not five.</p>
 <p><strong>Leakage checks (asserted in code, not just described).</strong> Label-derived,
 trend, ID, and baseline columns are banned from the feature list by assertion; the
-feature/label timeline is displayed; and a deliberate confession run in ML-09 proved the harness
-detects a real leak — handing the model the label's own window moved the forest from ROC-AUC
-0.654 → 0.997, after which the column was removed and the honest number kept.</p>
+feature/label timeline is displayed; and a deliberate confession run in ML-09 demonstrated that
+the harness detects a real leak — handing the model the label's own window moved the forest from
+ROC-AUC 0.654 → 0.997, after which the column was removed and the honest number kept.</p>
 <p><strong>Reproduction receipts.</strong> The capstone re-derives all 25 published numbers from
 the model and validation assignments within 0.005 (worst gap in this run: 0.0000) and hard-asserts
 the frame facts against the playbook receipts file. If any assertion fails, the run stops and the
