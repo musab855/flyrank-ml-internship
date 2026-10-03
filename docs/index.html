@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which content pages are losing visibility — and which should a reviewer open first?</title>
+<meta name="description" content="Capstone paper: a refresh / content opportunity scoring pipeline on 140,599 anonymized pages (March 2026). Transparent rule vs logistic regression vs random forest, client-grouped out-of-fold precision@K, and a tiered review queue with actions and limits.">
+<style>
+  :root {
+    --ink: #16181d; --muted: #565b66; --accent: #0b57d0; --line: #e3e5ea;
+    --callout: #f6f8fa; --warn: #8a5a00;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--ink); background: #fff;
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 47rem; margin: 0 auto; padding: 0 1.15rem 4rem; }
+  header { padding: 2.4rem 0 0.4rem; }
+  h1 { font-size: 1.85rem; line-height: 1.25; margin: 0 0 0.6rem; letter-spacing: -0.01em; }
+  .byline { color: var(--muted); font-size: 0.95rem; margin: 0.2rem 0; }
+  .byline a { color: var(--accent); }
+  h2 {
+    font-size: 1.3rem; margin: 2.6rem 0 0.7rem; padding-top: 1.1rem;
+    border-top: 1px solid var(--line); letter-spacing: -0.01em;
+  }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 0.5rem; }
+  p, li { margin: 0.65rem 0; }
+  a { color: var(--accent); }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em; background: var(--callout); padding: 0.08em 0.34em; border-radius: 4px;
+  }
+  pre {
+    background: var(--callout); border: 1px solid var(--line); border-radius: 6px;
+    padding: 0.85rem 1rem; overflow-x: auto; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; font-size: 0.86rem; }
+  .box {
+    background: var(--callout); border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem; border-radius: 0 6px 6px 0; margin: 1.1rem 0;
+  }
+  .box.warn { border-left-color: var(--warn); }
+  .box p:first-child { margin-top: 0; } .box p:last-child { margin-bottom: 0; }
+  .tw { overflow-x: auto; margin: 1rem 0; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.94rem; min-width: 34rem; }
+  th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; background: var(--callout); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.hl td { font-weight: 600; background: #eef4fe; }
+  figure { margin: 1.6rem 0; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 6px; }
+  figcaption { font-size: 0.92rem; color: var(--muted); margin-top: 0.5rem; }
+  figcaption strong { color: var(--ink); }
+  .toc {
+    background: var(--callout); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.8rem 1.1rem; margin: 1.4rem 0 0.4rem; font-size: 0.95rem;
+  }
+  .toc ol { margin: 0.35rem 0 0; padding-left: 1.3rem; }
+  .toc li { margin: 0.2rem 0; }
+  .small { font-size: 0.9rem; color: var(--muted); }
+  footer { border-top: 1px solid var(--line); margin-top: 2.8rem; padding-top: 1rem; font-size: 0.9rem; color: var(--muted); }
+  @media (max-width: 640px) {
+    body { font-size: 15.5px; }
+    h1 { font-size: 1.45rem; }
+    h2 { font-size: 1.18rem; }
+    header { padding-top: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Which content pages are losing visibility — and which should a reviewer open first?</h1>
+  <p class="byline">FlyRank ML Internship · Machine Learning track · capstone paper (ML-11) · October 2026</p>
+  <p class="byline">mirrors <a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb"><code>work/notebooks/capstone.ipynb</code></a>
+  · <a href="https://github.com/musab855/flyrank-ml-internship">repo</a>
+  · <a href="https://colab.research.google.com/github/musab855/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb">run in Colab</a></p>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#abstract">Abstract</a></li>
+    <li><a href="#intro">Introduction — the decision this supports</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#method">Methodology</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#limits">Limitations &amp; honest framing</a></li>
+    <li><a href="#recs">Ranked recommendations</a></li>
+    <li><a href="#repro">Reproducibility</a></li>
+    <li><a href="#credits">Acknowledgments &amp; data credit</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="abstract">
+<h2>1. Abstract</h2>
+<p>A content team cannot open every page, so the question this paper answers is: <em>which pages
+should a reviewer open first, in what order, and why?</em> We used one month of daily search
+performance — March 1–31, 2026 — for <strong>140,599 anonymized content pages across 43
+pseudonymous clients</strong>, with features measured on days 1–15 and an observed label on days
+16–31 (average daily impressions fell; base rate <strong>0.465</strong>). A fixed, transparent
+two-threshold rule (≥ 500 impressions/day <em>and</em> average position ≥ 11) was benchmarked
+against logistic regression and a random forest on three features, all scored out-of-fold under
+client-grouped 5-fold validation. <strong>The rule wins the head of the queue — precision@50 of
+0.880 vs 0.660 for the forest (1.89× vs 1.42× the base rate) — while the forest modestly wins
+the whole list (ROC-AUC 0.654 vs 0.609 for the rule as a ranker, +0.045)</strong>; together they
+produce a tiered queue of <strong>1,168 pages in which 78.0% actually declined</strong>. The
+output is decision-support for a human reviewer — ranked pages, actions, reason codes, and
+confidence — never an automated content change.</p>
+</section>
+
+<section id="intro">
+<h2>2. Introduction — the decision this supports</h2>
+<p>Monday morning, an SEO specialist has thirty minutes per page and an inventory of 140,599
+pages. If they open the wrong fifty, the week is spent polishing pages nobody was going to find
+anyway. The decision this work improves is narrow and concrete: <strong>which pages to open
+first, in what order, and why</strong> — the unit of analysis is one content page (a
+pseudonymous <code>content_id</code>) in a scored month.</p>
+<p>The obvious approach is a fixed rule: flag high-volume pages sitting deep in the results and
+review those. That rule was built in Week 4 of this program, before any model existed, and it is
+genuinely good at the top of its own list — but it is silent below its thresholds by
+construction, flagging 1,074 of 140,599 pages (0.76%). The remaining 139,525 pages get no rank
+at all, and a fixed if-statement cannot weigh several moderate signals together across them.</p>
+<p>That is the only place machine learning earns its seat here: ranking the pages the rule cannot
+see. Everything this paper claims is scoped to one frame, one month, one portfolio —
+<strong>observed, measured, or directional; decision-support, never causal</strong>. Nothing here
+predicts or explains how any search engine ranks pages, and no content change is ever shipped
+from a score.</p>
+</section>
+
+<section id="data">
+<h2>3. Data</h2>
+<p><strong>Source.</strong> The FlyRank internship warehouse release (build
+<code>flyrank_pseudonymized_warehouse_release_v20260703</code>) on Hugging Face — specifically
+<code>fact_content_daily_performance</code> (78,835,655 rows in total), from which the March
+2026 window was aggregated to one row per page. The grain was verified against
+<code>dim_content</code> (519,606 content items) in the data-contract assignment before any
+feature was built. Query-level data (<code>fact_content_query_90d</code>) was deliberately not
+used: raw queries never enter this work.</p>
+<p><strong>Frame and exclusions</strong> (printed by the capstone notebook on every run):</p>
+<div class="tw">
+<table>
+  <tr><th>Step</th><th class="num">Pages</th><th>Why</th></tr>
+  <tr><td>March 2026 slice, one row per page</td><td class="num">176,738</td><td>—</td></tr>
+  <tr><td>− position missing (no search-console data in the feature window)</td><td class="num">−24,757</td><td>features unusable</td></tr>
+  <tr><td>− position = 0 (the "no data" placeholder)</td><td class="num">−1,306</td><td>not a real position</td></tr>
+  <tr><td>− label undefined (either half of the month unmeasurable)</td><td class="num">−10,076</td><td>drop, never guess</td></tr>
+  <tr class="hl"><td>Modeling frame</td><td class="num">140,599</td><td>43 clients, base rate 0.4649</td></tr>
+</table>
+</div>
+<p>Every aggregation was filtered on <code>gsc_data_available = TRUE</code>, so zero-filled days
+never read as "no demand". <strong>Public safety:</strong> no client names, domains, URLs,
+titles, or queries appear anywhere in this work — only aggregates, pseudonymous IDs, and charts.</p>
+<p><strong>One separate dataset, used once, as context only.</strong> The committed starter slice
+(<code>data/raw/content_refresh_anonymized.csv</code>, 30,000 pages, 32 clients,
+trailing-90-day metrics, a different ±10% trend label) carries the age and freshness columns the
+warehouse frame lacks. It answers the "do older pages decline more?" question in §5 and is
+<strong>never a queue input</strong>.</p>
+</section>
+
+<section id="method">
+<h2>4. Methodology</h2>
+<p><strong>Label (observed, later window).</strong> <code>is_declining_label = 1</code> when
+average daily impressions on days 16–31 are lower than on days 1–15 — an outcome that happens
+<em>after</em> the features, not a rule we wrote. Prediction moment: 2026-03-16. Base rate
+<strong>0.4649</strong>, printed under every results table.</p>
+<p><strong>Features (3, all days 1–15):</strong> <code>gsc_impressions_avg</code>,
+<code>gsc_clicks_avg</code>, <code>position_avg</code>. Deliberately small: one month, 43
+clients, three stable observables — a wider list would fit noise. Derived inputs (<code>ctr</code>)
+are used for reason codes only, never as features.</p>
+<p><strong>Baseline (built first, fixed in Week 4):</strong> <code>HIGH_VOLUME_POOR_POSITION</code>
+— flag pages with ≥ 500 impressions/day <em>and</em> average position ≥ 11, rank flagged pages by
+impressions, everyone else scores 0. Two extra references keep the comparison fair:
+<code>rule_full</code> (the same flag given the whole frame to rank) and
+<code>impressions_only</code> (visibility with no rule at all). Week 4's signal audit returned
+<strong>CONFIRMED</strong> for the impressions cutoff and <strong>MIXED</strong> for the position
+cutoff, so position ≥ 11 is inherited as <em>policy</em> — a business assumption, not evidence —
+and stated as such.</p>
+<p><strong>Models.</strong> Logistic regression (log1p on the two counts, standardized,
+<code>class_weight=balanced</code>) as the interpretable baseline; a random forest (200 trees,
+<code>max_depth=10</code>, <code>min_samples_leaf=25</code>,
+<code>class_weight=balanced_subsample</code>) as the primary model. Both
+<code>random_state=42</code>.</p>
+<p><strong>Validation design.</strong> Client-grouped 5-fold out-of-fold scoring: every client
+sits in exactly one test fold, so every page is scored by a model that never saw its client;
+metrics are computed on the pooled out-of-fold scores — one queue, not five.</p>
+<p><strong>Leakage checks (asserted in code, not just described).</strong> Label-derived,
+trend, ID, and baseline columns are banned from the feature list by assertion; the
+feature/label timeline is displayed; and a deliberate confession run in ML-09 proved the harness
+detects a real leak — handing the model the label's own window moved the forest from ROC-AUC
+0.654 → 0.997, after which the column was removed and the honest number kept.</p>
+<p><strong>Reproduction receipts.</strong> The capstone re-derives all 25 published numbers from
+the model and validation assignments within 0.005 (worst gap in this run: 0.0000) and hard-asserts
+the frame facts against the playbook receipts file. If any assertion fails, the run stops and the
+paper must not ship.</p>
+</section>
+
+<section id="results">
+<h2>5. Results</h2>
+<p>Everything below is one run: same frame, same pages, same client-grouped split, base rate
+0.4649.</p>
+<div class="tw">
+<table>
+  <tr><th>Method</th><th class="num">P@10</th><th class="num">P@20</th><th class="num">P@50</th><th class="num">ROC-AUC</th><th class="num">Avg precision</th></tr>
+  <tr class="hl"><td>Rule (baseline)</td><td class="num">1.000</td><td class="num">0.950</td><td class="num">0.880</td><td class="num">0.505</td><td class="num">0.469</td></tr>
+  <tr><td>Rule as a ranker (<code>rule_full</code>)</td><td class="num">1.000</td><td class="num">0.950</td><td class="num">0.880</td><td class="num">0.609</td><td class="num">0.537</td></tr>
+  <tr><td>Impressions only</td><td class="num">0.700</td><td class="num">0.700</td><td class="num">0.620</td><td class="num">0.609</td><td class="num">0.534</td></tr>
+  <tr><td>Logistic regression</td><td class="num">0.700</td><td class="num">0.700</td><td class="num">0.780</td><td class="num">0.630</td><td class="num">0.571</td></tr>
+  <tr class="hl"><td>Random forest</td><td class="num">0.500</td><td class="num">0.550</td><td class="num">0.660</td><td class="num">0.654</td><td class="num">0.583</td></tr>
+  <tr><td><em>Base rate</em></td><td class="num"><em>0.465</em></td><td class="num"><em>0.465</em></td><td class="num"><em>0.465</em></td><td class="num"><em>0.500</em></td><td class="num"><em>0.465</em></td></tr>
+</table>
+</div>
+<p><strong>Did the model beat the baseline? Two honest answers.</strong> At the top of the queue,
+<strong>no</strong> — the rule's P@50 of 0.880 beats the forest's 0.660 (1.89× vs 1.42× the base
+rate), so a reviewer who reads only the first fifty rows should use the rule. Across the whole
+list, <strong>yes, modestly</strong> — the forest's ROC-AUC 0.654 and average precision 0.583 sit
+above the rule-as-a-ranker's 0.609 and 0.537, a measured <strong>+0.045</strong>, and the forest
+keeps ranking the 139,525 pages the rule is silent on.</p>
+
+<figure>
+  <img src="figures/queue_yield_curve.svg" alt="Precision at K versus K on a log scale for the rule, rule-as-a-ranker, impressions-only, logistic regression, and the random forest, with the 0.465 base rate as a dashed line and a vertical marker at the 1,074 flagged pages.">
+  <figcaption><strong>Takeaway:</strong> the rule holds the head of the list (P@10 = 1.000) and
+  is then clipped by its own flag at 1,074 pages, while the model's line keeps carrying value
+  across the whole inventory — measured precision@K, client-grouped out-of-fold, base rate 0.465.</figcaption>
+</figure>
+
+<h3>The split matters more than the algorithm</h3>
+<p>ML-09 ran the same harness under a row-random split for contrast: the forest reads P@50 0.800
+there, 100% of test pages' clients are also in training, and the resulting top-50 queue shares
+only <strong>5 of 50 pages</strong> with the honest grouped queue. Under the grouped split the
+number is 0.660 with <strong>0</strong> client overlap. The grouped figure is the one that
+answers the deployment question, and the contrast is measured, not assumed.</p>
+
+<h3>Error analysis — what the forest gets wrong</h3>
+<p>The forest's pooled top-50 contains 17 pages that did not decline (a random 50 would carry
+about 23, since the base rate is 0.465). The false positives share one shape: positions
+35.9–40.8, 860–2,065 impressions/day, but only 0.5–1.7 clicks/day (CTR 0.0003–0.0008). They are
+hard because the label can only ask "did impressions fall?" — at position ~40 the impression
+count itself swings day to day. Kin-of-target check: without the impressions feature, logistic
+regression falls to ROC-AUC 0.494 (no-skill) and the forest to 0.591. Impressions carries most
+of the signal, is measured strictly before the label window, and is disclosed as close kin for
+exactly that reason.</p>
+
+<h3>Finding: age does not rank the queue</h3>
+<p>The refresh-time question — <em>do older or staler pages decline more?</em> — was checked on
+the starter CSV (different dataset and label; context only). Decline rate <em>falls</em> with age,
+and freshness does not read at all:</p>
+<figure>
+  <img src="figures/decay_refresh_insight.svg" alt="Two bar charts from the 30,000-page starter slice: decline rate by content age bucket (63%, 51%, 43% for under 180 days, 180 to 365 days, and 365 plus days) and decline rate by days since last update, both against a 0.542 base-rate line, with small buckets hatched.">
+  <figcaption><strong>Takeaway:</strong> "old content decays" does not survive this slice — the
+  newest bucket declines <em>most</em> (62.7%, n=12,272) and the oldest least (42.6%, n=6,360)
+  against a 0.542 base rate — so the queue ranks on observed visibility at stake, not age.
+  Three of the five freshness buckets are under n=500 and are hatched, not read.</figcaption>
+</figure>
+</section>
+
+<section id="limits">
+<h2>6. Limitations &amp; honest framing</h2>
+<p>What this work cannot claim, written before anyone else has to:</p>
+<ol>
+  <li><strong>One month, one portfolio.</strong> March 2026, 43 clients, one scored window. No
+  second month exists yet, so every "next month" number on this page is a reference, not a
+  result.</li>
+  <li><strong>The label is a proxy.</strong> "Impressions fell vs. the first half of the month"
+  is not "the page is decaying" — regression to the mean, seasonality, and demand shifts are not
+  measured, and half of the flagged pages may simply look like they fell.</li>
+  <li><strong>The position cutoff is policy, not evidence.</strong> Week 4's audit verdict on
+  <code>position ≥ 11</code> was MIXED (decline rate 47.2% → 48.0% → 45.9% → 42.5% —
+  non-monotonic). It is kept because it encodes a business assumption, and inherited unchanged.</li>
+  <li><strong>53% of Tier A may not be human traffic.</strong> 572 of 1,074 flagged pages have
+  CTR &lt; 0.001 — the <code>verify_traffic_first</code> action exists because those pages must
+  pass a traffic check before anyone edits them.</li>
+  <li><strong>Nothing here is causal.</strong> No experiment, no intervention: the words are
+  observed / measured / directional / decision-support. This work says nothing about how any
+  search engine ranks pages.</li>
+  <li><strong>The queue is client-concentrated.</strong> One client holds 74.7% of flagged pages;
+  the largest client holds 82% of the top-50. Read the queue within-client.</li>
+  <li><strong>Scores are ranks, not probabilities.</strong> An out-of-fold score orders pages to
+  review; it does not estimate a page's chance of anything.</li>
+</ol>
+<p>The age/freshness evidence in §5 comes from a different dataset with a different label, and a
+second negative result belongs here too: the research paper's length gap does not reproduce in
+that slice (median 2,909 vs 2,848 words ≈ 2%, not 37.6%) — not a refutation, but a finding that
+the gap is not universal.</p>
+</section>
+
+<section id="recs">
+<h2>7. Ranked recommendations</h2>
+<p><strong>The deliverable is a tiered queue: 1,168 pages (Tier A 1,074 + Tier B 94), 78.0%
+labelled declining vs the 0.465 frame base rate (1.68×).</strong></p>
+<div class="tw">
+<table>
+  <tr><th>Tier</th><th class="num">Pages</th><th>Order</th><th>Confidence</th><th>Actions</th></tr>
+  <tr><td><strong>A</strong> — rule-flagged</td><td class="num">1,074</td><td>impressions (measured P@50 0.880)</td><td>never Tier-B-low; 20 high</td><td><code>verify_traffic_first</code> 572 · <code>review_first_refresh_and_ctr</code> 502</td></tr>
+  <tr><td><strong>B</strong> — forest tail on visible, unflagged pages (score ≥ 0.80, impressions ≥ 100)</td><td class="num">94</td><td>model rank</td><td>never <code>high</code> — one month is not high confidence</td><td><code>secondary_review</code> 94</td></tr>
+</table>
+</div>
+<p>Confidence mix across the queue: <strong>low 687 / medium 461 / high 20</strong> — <code>low</code>
+means borderline or near-zero CTR, the two ways this data misleads a reviewer. Every row carries
+reason codes (<code>HIGH_VOLUME_POOR_POSITION</code> 1,074, <code>NEAR_ZERO_CTR_IMPRESSIONS</code> 572,
+<code>BORDERLINE_THRESHOLD</code> 170, <code>MODEL_HIGH_DECLINE_RANK</code> 621) and a
+<code>wrong_if</code> string — what would make the call wrong.</p>
+
+<figure>
+  <img src="figures/queue_action_mix.svg" alt="Two horizontal bar charts: queue pages by action (572 verify traffic first, 502 review first refresh and CTR, 94 secondary review) and Tier A pages by overlapping reason code.">
+  <figcaption><strong>Takeaway:</strong> most of Tier A starts with a <em>check</em>, not an edit —
+  572 of 1,074 pages must pass traffic verification first, and the model's own corroboration
+  (621 pages) outranks no single signal.</figcaption>
+</figure>
+
+<h3>Archetypes → standing actions</h3>
+<div class="tw">
+<table>
+  <tr><th>Archetype (rule-based tag)</th><th class="num">Pages</th><th class="num">Decline rate</th><th>Standing action</th></tr>
+  <tr><td><code>high_volume_deep_position</code> (impr ≥ 500, pos ≥ 11)</td><td class="num">1,074</td><td class="num">0.780</td><td><code>review_first_refresh_and_ctr</code> or <code>verify_traffic_first</code></td></tr>
+  <tr><td><code>page_one_high_stakes</code> (impr ≥ 500, pos &lt; 11)</td><td class="num">2,031</td><td class="num">0.453</td><td><code>protect_and_monitor</code> — decay watch, not a refresh trigger</td></tr>
+  <tr><td><code>mid_volume_opportunity</code> (impr ≥ 100)</td><td class="num">17,658</td><td class="num">0.544</td><td><code>monitor</code> (or <code>secondary_review</code> if Tier B)</td></tr>
+  <tr><td><code>low_volume_long_tail</code> (impr &lt; 100)</td><td class="num">119,836</td><td class="num">0.451</td><td><code>monitor_only</code></td></tr>
+</table>
+</div>
+<p>The decline rates do the arguing: page-one pages decline <em>below</em> the base rate (0.453 vs
+0.465) — queuing them for refresh would spend reviewer hours where this frame says visibility is
+not at stake. Every page outside the queue still gets its standing action; nothing is unranked
+<em>and</em> unmanaged.</p>
+
+<h3>Capacity: what a team can actually review</h3>
+<p>At the stated 30-minutes-per-page assumption (an assumption, not a measurement):</p>
+<div class="tw">
+<table>
+  <tr><th>Queue slice</th><th class="num">Pages</th><th class="num">Declining in batch</th><th class="num">Measured P@K</th><th class="num">Impressions/day at stake</th><th class="num">Share of visibility</th><th class="num">Review hours</th></tr>
+  <tr><td>Top 10</td><td class="num">10</td><td class="num">10</td><td class="num">1.000</td><td class="num">51,912</td><td class="num">0.6%</td><td class="num">5</td></tr>
+  <tr><td>Top 20</td><td class="num">20</td><td class="num">19</td><td class="num">0.950</td><td class="num">83,414</td><td class="num">0.9%</td><td class="num">10</td></tr>
+  <tr class="hl"><td>Top 50</td><td class="num">50</td><td class="num">44</td><td class="num">0.880</td><td class="num">158,626</td><td class="num">1.8%</td><td class="num">25</td></tr>
+  <tr><td>Top 100</td><td class="num">100</td><td class="num">85</td><td class="num">0.850</td><td class="num">259,830</td><td class="num">2.9%</td><td class="num">50</td></tr>
+  <tr><td>Top 500</td><td class="num">500</td><td class="num">397</td><td class="num">0.794</td><td class="num">722,517</td><td class="num">8.1%</td><td class="num">250</td></tr>
+  <tr><td>Tier A (all flagged)</td><td class="num">1,074</td><td class="num">838</td><td class="num">0.780</td><td class="num">1,082,306</td><td class="num">12.2%</td><td class="num">537</td></tr>
+  <tr><td>Full queue</td><td class="num">1,168</td><td class="num">911</td><td class="num">0.780</td><td class="num">1,111,611</td><td class="num">12.5%</td><td class="num">584</td></tr>
+</table>
+</div>
+
+<figure>
+  <img src="figures/capacity_vs_yield.svg" alt="Combined chart: bars show pages labelled declining in each top-K slice and a line shows impressions per day at stake, from 10 to 1,168 pages reviewed.">
+  <figcaption><strong>Takeaway:</strong> the first 50 pages buy 44 confirmed declines and 158,626
+  impressions/day in one focused week (25 hours) — clearing the whole 1,168-page queue at 20
+  pages/week would take about 14.6 months, so this is a standing backlog, not a one-shot project.</figcaption>
+</figure>
+
+<h3>Monitoring &amp; retrain triggers</h3>
+<p>Three are <strong>firing by design</strong> and two wait for a second month:</p>
+<div class="tw">
+<table>
+  <tr><th>Trigger</th><th>Rule</th><th>Current</th><th>Status</th></tr>
+  <tr><td>Near-zero-CTR share of top 50</td><td>&gt; 60% → traffic verification mandatory before any content action</td><td>66% (33/50)</td><td><strong>FIRING</strong> (gate stays on)</td></tr>
+  <tr><td>Single-client share of top 50</td><td>&gt; 60% → warn reviewer, read within-client</td><td>82%</td><td><strong>FIRING</strong> (queue unchanged)</td></tr>
+  <tr><td>Frame freshness</td><td>score the most recent complete month</td><td>fixed March 2026 window</td><td><strong>FIRING</strong> (re-score when newer data is allowed)</td></tr>
+  <tr><td>Queue overlap month over month</td><td>&lt; 50% of last month's top-50 returns → re-rank, re-audit reason codes</td><td>first run</td><td>check at next run</td></tr>
+  <tr><td>Feature drift (median impressions/day)</td><td>&gt; 20% shift → re-check thresholds before trusting scores</td><td>first run</td><td>check at next run</td></tr>
+  <tr><td>P@50 / grouped ROC-AUC / base-rate drift</td><td>re-audit then retrain on fresh labels</td><td>0.880 / 0.654 / 0.465 (March references)</td><td>baseline — real test is next month</td></tr>
+</table>
+</div>
+
+<h3>How a reviewer uses it tomorrow</h3>
+<ol>
+  <li>Take the top of Tier A (or just the top 10 if the week is short).</li>
+  <li>Run the four human checks first: is the traffic real? decline or look-alike
+  (consolidation / seasonality / SERP-CTR / noise)? borderline? one client's problem?</li>
+  <li>Only then choose the content action — <em>what to change is a human decision</em>.</li>
+  <li>Write down what would make the call wrong; the <code>wrong_if</code> field is already on the row.</li>
+</ol>
+<div class="box warn">
+  <p><strong>No-go list.</strong> Never publish, edit, delete, or merge from a score. Never act
+  on <code>low_volume_long_tail</code>. Never edit a <code>verify_traffic_first</code> page until
+  traffic is verified. Never retrain unattended. Never use the queue as a team or client
+  performance metric.</p>
+</div>
+</section>
+
+<section id="repro">
+<h2>8. Reproducibility</h2>
+<pre><code>git clone https://github.com/musab855/flyrank-ml-internship.git
+cd flyrank-ml-internship
+pip install -r requirements.txt
+jupyter nbconvert --to notebook --execute --inplace work/notebooks/capstone.ipynb</code></pre>
+<p>The capstone is cache-first: it reads
+<code>work/outputs/feature_frame_march_audit.csv</code> when present (gitignored — regenerate on
+demand), otherwise re-scans the warehouse through DuckDB over
+<code>hf://datasets/FlyRank/internship-warehouse</code> using a Hugging Face <em>read</em> token
+from Colab Secrets, the environment, or <code>.env</code> — never pasted into a cell and never
+printed. The full chain runs in order: <code>w01</code> → <code>w02</code> →
+<code>w03_data_contract</code> → <code>w04_baseline_score</code> → <code>w05_model</code> →
+<code>w06_validation_audit</code> → <code>w07_action_playbook</code> → <code>capstone</code>,
+each executed top-to-bottom.</p>
+<p><strong>Seeds &amp; environment:</strong> <code>random_state = 42</code> for folds, logistic
+regression, and the forest; canonical <code>content_id</code> row order makes folds, tied queues,
+and the forest's bootstrap reproducible. This run: Python 3.10.11, numpy 1.26.4, pandas 2.1.1,
+scikit-learn 1.3.1, matplotlib 3.8.0, duckdb 1.5.6 — 25/25 published numbers reproduced within
+0.005 (worst gap 0.0000).</p>
+<p><strong>Machine-checkable outputs:</strong>
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/outputs/capstone_metrics.json"><code>work/outputs/capstone_metrics.json</code></a>
+(every number on this page) and
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/outputs/playbook_metrics.json"><code>work/outputs/playbook_metrics.json</code></a>
+(the receipts the capstone asserts against). The queue CSV itself is gitignored by design — CI
+fails any committed dataset — and is regenerated by <code>w07_action_playbook.ipynb</code>.</p>
+<p><strong>Notebooks &amp; report:</strong>
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb">capstone</a> ·
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/w07_action_playbook.ipynb">w07 (playbook)</a> ·
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/w06_validation_audit.ipynb">w06 (validation)</a> ·
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/w05_model.ipynb">w05 (model)</a> ·
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/w04_baseline_score.ipynb">w04 (baseline)</a> ·
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/w03_data_contract.ipynb">w03 (contract)</a> ·
+<a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/capstone_report.md">capstone report (markdown)</a></p>
+</section>
+
+<section id="credits">
+<h2>9. Acknowledgments &amp; data credit</h2>
+<p>Data: <a href="https://huggingface.co/datasets/FlyRank/internship-warehouse"><code>FlyRank/internship-warehouse</code></a>
+on Hugging Face (gated; pseudonymized warehouse, build
+<code>flyrank_pseudonymized_warehouse_release_v20260703</code>) and the committed starter slice
+<code>data/raw/content_refresh_anonymized.csv</code> in this repository — both used under the
+program's data-use terms. <a href="https://github.com/musab855/flyrank-ml-internship/blob/main/DATA_USE.md"><code>DATA_USE.md</code></a>
+governs reuse. Methods and checklists come from the FlyRank ML internship skills library; tooling:
+DuckDB, pandas, scikit-learn, matplotlib. All figures are regenerated by the capstone notebook
+from the committed code — no hand-edited charts.</p>
+</section>
+
+</main>
+
+<footer>
+  <p>FlyRank ML Internship · capstone paper (ML-11) · every number on this page is reproducible
+  from <a href="https://github.com/musab855/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb"><code>work/notebooks/capstone.ipynb</code></a>
+  (executed top-to-bottom, 0 errors, receipts 25/25 MATCH).</p>
+</footer>
+
+</div>
+</body>
+</html>

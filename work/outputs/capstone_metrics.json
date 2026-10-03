@@ -1,0 +1,171 @@
+{
+  "assignment": "ML-11 capstone (paper mirrors this notebook)",
+  "frame": {
+    "window": "2026-03-01..2026-03-31",
+    "features": [
+      "gsc_impressions_avg",
+      "gsc_clicks_avg",
+      "position_avg"
+    ],
+    "label": "impressions days 16-31 < days 1-15",
+    "pages": 140599,
+    "clients": 43,
+    "base_rate": 0.4649,
+    "flagged_by_rule": 1074,
+    "split": "client-grouped 5-fold OOF",
+    "random_state": 42,
+    "rows_before_filter": 176738,
+    "excluded": {
+      "position_nan": 24757,
+      "position_zero": 1306,
+      "undefined_label": 10076
+    }
+  },
+  "receipts": {
+    "rule": {
+      "precision_at_10": 1.0,
+      "precision_at_20": 0.95,
+      "precision_at_50": 0.88,
+      "roc_auc": 0.5048,
+      "avg_precision": 0.4694
+    },
+    "rule_full": {
+      "precision_at_10": 1.0,
+      "precision_at_20": 0.95,
+      "precision_at_50": 0.88,
+      "roc_auc": 0.6094,
+      "avg_precision": 0.5375
+    },
+    "impressions_only": {
+      "precision_at_10": 0.7,
+      "precision_at_20": 0.7,
+      "precision_at_50": 0.62,
+      "roc_auc": 0.6094,
+      "avg_precision": 0.5337
+    },
+    "logistic_regression": {
+      "precision_at_10": 0.7,
+      "precision_at_20": 0.7,
+      "precision_at_50": 0.78,
+      "roc_auc": 0.6298,
+      "avg_precision": 0.5711
+    },
+    "random_forest": {
+      "precision_at_10": 0.5,
+      "precision_at_20": 0.55,
+      "precision_at_50": 0.66,
+      "roc_auc": 0.6543,
+      "avg_precision": 0.583
+    }
+  },
+  "reproduction": {
+    "published_numbers_checked": 25,
+    "match": 25,
+    "max_abs_diff": 0.0,
+    "tolerance": 0.005,
+    "also_checked": "work/outputs/playbook_metrics.json (all receipts)"
+  },
+  "queue": {
+    "total": 1168,
+    "tier_a": 1074,
+    "tier_b": 94,
+    "declining_rate": 0.78,
+    "action_mix": {
+      "verify_traffic_first": 572,
+      "review_first_refresh_and_ctr": 502,
+      "secondary_review": 94
+    },
+    "confidence_mix": {
+      "low": 687,
+      "medium": 461,
+      "high": 20
+    },
+    "archetype_mix": {
+      "low_volume_long_tail": 119836,
+      "mid_volume_opportunity": 17658,
+      "page_one_high_stakes": 2031,
+      "high_volume_deep_position": 1074
+    },
+    "top50_near_zero_ctr": 33,
+    "top50_clients": 3,
+    "tier_a_visibility_share": 0.1217
+  },
+  "capacity": [
+    {
+      "K": 10,
+      "declining_in_batch": 10,
+      "measured_P@K": 1.0,
+      "impr/day_at_stake": 51912,
+      "share_of_frame_visibility": "0.6%",
+      "review_hours_at_30min": 5
+    },
+    {
+      "K": 20,
+      "declining_in_batch": 19,
+      "measured_P@K": 0.95,
+      "impr/day_at_stake": 83414,
+      "share_of_frame_visibility": "0.9%",
+      "review_hours_at_30min": 10
+    },
+    {
+      "K": 50,
+      "declining_in_batch": 44,
+      "measured_P@K": 0.88,
+      "impr/day_at_stake": 158626,
+      "share_of_frame_visibility": "1.8%",
+      "review_hours_at_30min": 25
+    },
+    {
+      "K": 100,
+      "declining_in_batch": 85,
+      "measured_P@K": 0.85,
+      "impr/day_at_stake": 259830,
+      "share_of_frame_visibility": "2.9%",
+      "review_hours_at_30min": 50
+    },
+    {
+      "K": 200,
+      "declining_in_batch": 169,
+      "measured_P@K": 0.845,
+      "impr/day_at_stake": 414670,
+      "share_of_frame_visibility": "4.7%",
+      "review_hours_at_30min": 100
+    },
+    {
+      "K": 500,
+      "declining_in_batch": 397,
+      "measured_P@K": 0.794,
+      "impr/day_at_stake": 722517,
+      "share_of_frame_visibility": "8.1%",
+      "review_hours_at_30min": 250
+    },
+    {
+      "K": 1074,
+      "declining_in_batch": 838,
+      "measured_P@K": 0.78,
+      "impr/day_at_stake": 1082306,
+      "share_of_frame_visibility": "12.2%",
+      "review_hours_at_30min": 537
+    },
+    {
+      "K": 1168,
+      "declining_in_batch": 911,
+      "measured_P@K": 0.78,
+      "impr/day_at_stake": 1111611,
+      "share_of_frame_visibility": "12.5%",
+      "review_hours_at_30min": 584
+    }
+  ],
+  "limitations": {
+    "near_zero_ctr_in_tier_a": 572,
+    "largest_client_share_of_flagged": 0.7467,
+    "triggers_firing": 3
+  },
+  "figures": [
+    "queue_yield_curve.svg",
+    "queue_action_mix.svg",
+    "capacity_vs_yield.svg",
+    "decay_refresh_insight.svg"
+  ],
+  "note": "queue CSV stays gitignored (CI blocks data CSVs) - regenerate via ML-10"
+}
