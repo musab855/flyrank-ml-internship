@@ -99,7 +99,7 @@
 
 <section id="abstract">
 <h2>1. Abstract</h2>
-<p>A content team cannot open every page, so the question this paper answers is: <em>which pages
+<p>A content team cannot open every page &mdash; <strong>FlyRank's content problem</strong> &mdash; and the question this paper answers is: <em>which pages
 should a reviewer open first, in what order, and why?</em> We used one month of daily search
 performance — March 1–31, 2026 — for <strong>140,599 anonymized content pages across 43
 pseudonymous clients</strong>, with features measured on days 1–15 and an observed label on days
@@ -118,7 +118,9 @@ confidence — never an automated content change.</p>
 <h2>2. Introduction — the decision this supports</h2>
 <p>Monday morning, an SEO specialist has thirty minutes per page and an inventory of 140,599
 pages. If they open the wrong fifty, the week is spent polishing pages nobody was going to find
-anyway. The decision this work improves is narrow and concrete: <strong>which pages to open
+anyway.</p>
+<p>This paper is the case study for that lane: <strong>FlyRank's Refresh / Content Opportunity Scoring</strong> track, run on the program's own production warehouse (78,835,655 rows of daily search performance), of which this March 2026 slice is the public-safe sample.</p>
+<p>The decision this work improves is narrow and concrete: <strong>which pages to open
 first, in what order, and why</strong> — the unit of analysis is one content page (a
 pseudonymous <code>content_id</code>) in a scored month.</p>
 <p>The obvious approach is a fixed rule: flag high-volume pages sitting deep in the results and

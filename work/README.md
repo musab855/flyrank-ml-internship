@@ -50,5 +50,6 @@ Tick them off as you go; this table is the map of your work:
 | `notebooks/w06_validation_audit.ipynb` | ML-09 | ☑ executed |
 | `notebooks/w07_action_playbook.ipynb` | ML-10 | ☑ executed |
 | `notebooks/capstone.ipynb` | ML-11 (the paper mirrors it) | ☑ executed, 0 errors, receipts 25/25 MATCH |
+| `notebooks/capstone.ipynb` §8 (demo outline + shareable cuts) | ML-12 (Tell the Story) | ☑ committed |
 
 When your paper is deployed, put its exact URL in `../submission/paper_url.txt` (one line).
