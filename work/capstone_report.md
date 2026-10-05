@@ -232,7 +232,7 @@ for refresh would spend reviewer hours where this frame says visibility is not a
 10/10 declining; top-50 = **25 hours** (one focused week) with 44/50 declining and 158,626
 impressions/day at stake; the full 1,168-page queue = 584 hours ≈ clearing at 20 pages/week
 takes ~14.6 months — a **standing backlog**, not a one-shot project. Tier A holds **12.2% of the
-frame's visibility on 0.76% of its pages** (1,082,306 of 8,895,076 impressions/day).
+frame's visibility on 0.76% of its pages** (1,082,305 of 8,895,076 impressions/day).
 
 **How a reviewer uses it tomorrow:** take the top of Tier A; run the four human checks first
 (real traffic? decline or look-alike — consolidation/seasonality/SERP-CTR/noise? borderline?
