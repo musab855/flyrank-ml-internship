@@ -300,3 +300,5 @@ never printed). To reproduce the full chain: `w01` → `w02` → `w03_data_contr
 > - [x] No client-identifying details — pseudonymous IDs, aggregates, charts only.
 > - [x] Numbers in this report match a fresh re-run of `work/notebooks/capstone.ipynb`
 >       (executed top-to-bottom, 0 errors, 25/25 receipts MATCH).
+
+- **Data credit:** Built on the [FlyRank ML Internship dataset](https://flyrank.ai).
