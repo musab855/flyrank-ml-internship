@@ -43,8 +43,8 @@ Tick them off as you go; this table is the map of your work:
 | `notebooks/w01_research_question.ipynb` | ML-02 | ☑ executed |
 | `notebooks/w02_ml_task_framing.ipynb` | ML-03 | ☑ executed |
 | `notebooks/w03_data_contract.ipynb` | ML-04 | ☑ executed |
-| `notebooks/w03_feature_leakage_check.ipynb` | ML-05 | ☐ skeleton — the leakage work lives in ML-04 §3B (trap demo) and `w06_validation_audit.ipynb` §3 (honest run + confession) |
-| `notebooks/w04_signal_audit.ipynb` | ML-06 | ☐ skeleton — the signal audit (CONFIRMED / MIXED verdicts) lives in `w04_baseline_score.ipynb` |
+| `notebooks/w03_feature_leakage_check.ipynb` | ML-05 | ☑ executed — banned-column + timeline tests pass; planted leak 0.997 vs honest grouped-OOF 0.6543 = receipt; privacy check PASS |
+| `notebooks/w04_signal_audit.ipynb` | ML-06 | ☑ executed — verdicts: impressions CONFIRMED / position MIXED / age OPPOSITE; n=500 floors respected (2000+ bucket n=186 not read); flag-linked receipts 1,074 / 78.0% match |
 | `notebooks/w04_baseline_score.ipynb` | ML-07 | ☑ executed |
 | `notebooks/w05_model.ipynb` | ML-08 | ☑ executed |
 | `notebooks/w06_validation_audit.ipynb` | ML-09 | ☑ executed |
